@@ -862,10 +862,223 @@ body {
     text-align: center;
 }
 
-/* Responsive */
+/* Mobile Only Elements */
+.mobile-only {
+    display: none;
+}
+
 @media (max-width: 768px) {
+    .mobile-only {
+        display: flex;
+    }
+}
+
+/* Responsive */
+/* Responsive Design */
+
+/* Tablets & Smaller Laptops */
+@media (max-width: 1024px) {
+    .recipe-grid {
+        grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    }
+}
+
+/* Tablets (Portrait) */
+@media (max-width: 768px) {
+    .app-header {
+        padding: 15px 20px;
+        flex-wrap: wrap;
+        gap: 15px;
+    }
+
+    .nav-menu {
+        gap: 20px;
+    }
+
+    .nav-link span {
+        font-size: 24px;
+        /* Larger icons */
+    }
+
+    .nav-link {
+        font-size: 0;
+        /* Hide text on smaller tablets if needed, or keep small */
+    }
+
+    .nav-link span {
+        margin: 0;
+    }
+
+    .hero-section {
+        padding: 60px 20px;
+        margin: 20px 0 40px;
+    }
+
     .hero-section h2 {
-        font-size: 36px;
+        font-size: 42px;
+    }
+
+    .modal-content {
+        width: 95%;
+        height: 95vh;
+    }
+
+    .modal-hero {
+        height: 250px;
+    }
+}
+
+/* Mobile Devices */
+@media (max-width: 480px) {
+    .app-header {
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+        padding: 15px 20px;
+        flex-wrap: wrap;
+    }
+
+    .logo {
+        flex: 1;
+    }
+
+    .logo h1 {
+        font-size: 24px;
+    }
+
+    #hamburger-btn {
+        order: 2;
+        z-index: 1001;
+    }
+
+    .nav-menu {
+        position: fixed;
+        top: 70px;
+        left: 0;
+        width: 100%;
+        background: var(--card-bg);
+        flex-direction: column;
+        gap: 0;
+        padding: 0;
+        border-top: 1px solid rgba(0, 0, 0, 0.1);
+        box-shadow: var(--shadow-md);
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.3s ease;
+        order: 4;
+    }
+
+    .nav-menu.active {
+        max-height: 300px;
+    }
+
+    .nav-link {
+        width: 100%;
+        padding: 18px 20px;
+        font-size: 16px;
+        border-radius: 0;
+        background: transparent;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .nav-link span {
+        font-size: 22px;
+    }
+
+    .nav-link:hover,
+    .nav-link.active {
+        background: rgba(255, 71, 87, 0.1);
+    }
+
+    .header-controls {
+        order: 3;
+        gap: 15px;
+    }
+
+    .hero-section {
+        padding: 40px 15px;
+        border-radius: 20px;
+        margin: 10px 0 30px;
+    }
+
+    .hero-section h2 {
+        font-size: 32px;
+    }
+
+    .search-container {
+        padding: 5px;
+        max-width: 100%;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    #search-input {
+        font-size: 16px;
+        /* Prevent zoom on iOS */
+        padding: 12px 15px;
+        flex: 1;
+        min-width: 0;
+        /* Prevent overflow */
+    }
+
+    #search-btn {
+        width: 46px;
+        height: 46px;
+        min-width: 46px;
+        min-height: 46px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+        flex-shrink: 0;
+        margin: 0;
+    }
+
+    #search-btn span {
+        font-size: 20px;
+        line-height: 1;
+    }
+
+    .category-list {
+        grid-template-columns: repeat(2, 1fr);
+        /* 2 columns fixed */
+        gap: 15px;
+    }
+
+    .category-card {
+        padding: 15px;
+    }
+
+    .category-card img {
+        width: 70px;
+        height: 70px;
+    }
+
+    .category-card h4 {
+        font-size: 16px;
+    }
+
+    .recipe-grid {
+        grid-template-columns: 1fr;
+        /* Single column for recipes */
+        gap: 25px;
+    }
+
+    .recipe-image-wrapper {
+        height: 200px;
+    }
+
+    /* Modal Mobile */
+    .modal-content {
+        width: 100%;
+        height: 100%;
+        border-radius: 0;
+        max-height: 100vh;
     }
 
     .modal-hero {
@@ -874,9 +1087,61 @@ body {
 
     .modal-body {
         padding: 20px;
+        padding-bottom: 80px;
+        /* Space for fixed buttons if any */
     }
 
     .modal-title h2 {
-        font-size: 28px;
+        font-size: 24px;
+    }
+
+    .ingredients-grid {
+        grid-template-columns: 1fr;
+        /* List view for ingredients */
+    }
+
+    /* Cooking Mode Mobile */
+    .cooking-header {
+        padding: 15px;
+    }
+
+    .step-container {
+        padding: 20px;
+        justify-content: flex-start;
+        /* Align top */
+        padding-top: 40px;
+    }
+
+    .step-content {
+        padding: 25px;
+        margin-bottom: 100px;
+        /* Space for controls */
+    }
+
+    .step-text {
+        font-size: 22px;
+    }
+
+    .cooking-controls {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        padding: 20px;
+        background: var(--card-bg);
+        box-shadow: 0 -5px 20px rgba(0, 0, 0, 0.1);
+        gap: 20px;
+    }
+
+    .control-btn {
+        width: 50px;
+        height: 50px;
+        font-size: 20px;
+    }
+
+    .control-btn.large {
+        width: 70px;
+        height: 70px;
+        font-size: 32px;
     }
 }

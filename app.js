@@ -54,6 +54,7 @@ let state = {
 document.addEventListener('DOMContentLoaded', () => {
     initTheme();
     initializeFilters();
+    initHamburgerMenu();
 
     // Parallel Fetching for Speed ⚡
     Promise.all([fetchCategories(), fetchPopularRecipes()])
@@ -79,6 +80,47 @@ function updateThemeIcon(theme) {
     const icon = elements.themeToggle.querySelector('span');
     icon.textContent = theme === 'light' ? 'dark_mode' : 'light_mode';
 }
+
+// --- Hamburger Menu Logic ---
+function initHamburgerMenu() {
+    const hamburgerBtn = document.getElementById('hamburger-btn');
+    const navMenu = document.getElementById('nav-menu');
+
+    if (hamburgerBtn && navMenu) {
+        hamburgerBtn.addEventListener('click', () => {
+            navMenu.classList.toggle('active');
+            const icon = hamburgerBtn.querySelector('span');
+            icon.textContent = navMenu.classList.contains('active') ? 'close' : 'menu';
+        });
+
+        // Close menu when clicking a nav link
+        const navLinks = navMenu.querySelectorAll('.nav-link');
+        navLinks.forEach(link => {
+            link.addEventListener('click', () => {
+                navMenu.classList.remove('active');
+                const icon = hamburgerBtn.querySelector('span');
+                icon.textContent = 'menu';
+            });
+        });
+    }
+}
+
+// --- Responsive Placeholder Logic ---
+function updateSearchPlaceholder() {
+    const searchInput = elements.searchInput;
+    if (searchInput) {
+        if (window.innerWidth <= 480) {
+            searchInput.placeholder = "What are you craving today?";
+        } else {
+            searchInput.placeholder = "What are you craving today? (e.g., Pasta, Tacos...)";
+        }
+    }
+}
+
+// Update on load and resize
+window.addEventListener('resize', updateSearchPlaceholder);
+updateSearchPlaceholder();
+
 
 // --- Favorites Logic ---
 function toggleFavorite(recipe) {
