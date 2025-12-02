@@ -929,52 +929,126 @@ body {
 }
 
 /* Mobile Devices */
-@media (max-width: 480px) {
+/* Small Mobile Devices (320px - 374px) */
+@media (max-width: 374px) {
     .app-header {
+        padding: 12px 15px;
+    }
+
+    .logo h1 {
+        font-size: 20px;
+    }
+
+    .logo .icon {
+        font-size: 28px;
+    }
+
+    .header-controls {
+        gap: 10px;
+    }
+
+    .icon-btn-header {
+        width: 38px;
+        height: 38px;
+    }
+
+    .hero-section h2 {
+        font-size: 28px;
+    }
+
+    .search-container {
+        padding: 4px;
+    }
+
+    #search-input {
+        padding: 10px 12px;
+        font-size: 15px;
+    }
+
+    #search-btn {
+        width: 42px;
+        height: 42px;
+        min-width: 42px;
+        min-height: 42px;
+    }
+
+    #search-btn span {
+        font-size: 18px;
+    }
+}
+
+/* Mobile Devices (All - 320px to 480px) */
+@media (max-width: 480px) {
+    * {
+        -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+    }
+
+    body {
+        overflow-x: hidden;
+    }
+
+    main {
+        padding: 15px;
+    }
+
+    .app-header {
+        position: sticky;
+        top: 0;
         flex-direction: row;
         justify-content: space-between;
         align-items: center;
         padding: 15px 20px;
         flex-wrap: wrap;
+        min-height: 70px;
     }
 
     .logo {
         flex: 1;
+        min-width: 0;
     }
 
     .logo h1 {
-        font-size: 24px;
+        font-size: 22px;
     }
 
     #hamburger-btn {
         order: 2;
-        z-index: 1001;
+        z-index: 1002;
+        position: relative;
     }
 
     .nav-menu {
         position: fixed;
         top: 70px;
         left: 0;
-        width: 100%;
+        right: 0;
+        width: 100vw;
         background: var(--card-bg);
         flex-direction: column;
         gap: 0;
         padding: 0;
+        margin: 0;
         border-top: 1px solid rgba(0, 0, 0, 0.1);
-        box-shadow: var(--shadow-md);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
         max-height: 0;
         overflow: hidden;
-        transition: max-height 0.3s ease;
+        transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         order: 4;
+        z-index: 1001;
+    }
+
+    [data-theme="dark"] .nav-menu {
+        background: rgba(30, 39, 46, 0.98);
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
     }
 
     .nav-menu.active {
-        max-height: 300px;
+        max-height: 250px;
     }
 
     .nav-link {
         width: 100%;
-        padding: 18px 20px;
+        padding: 16px 20px;
         font-size: 16px;
         border-radius: 0;
         background: transparent;
@@ -982,10 +1056,15 @@ body {
         display: flex;
         align-items: center;
         gap: 12px;
+        transition: background 0.2s ease;
+    }
+
+    [data-theme="dark"] .nav-link {
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
     }
 
     .nav-link span {
-        font-size: 22px;
+        font-size: 20px;
     }
 
     .nav-link:hover,
@@ -995,34 +1074,38 @@ body {
 
     .header-controls {
         order: 3;
-        gap: 15px;
+        gap: 12px;
     }
 
     .hero-section {
         padding: 40px 15px;
         border-radius: 20px;
-        margin: 10px 0 30px;
+        margin: 15px 0 30px;
     }
 
     .hero-section h2 {
-        font-size: 32px;
+        font-size: 30px;
+        line-height: 1.2;
     }
 
     .search-container {
         padding: 5px;
         max-width: 100%;
+        width: 100%;
         display: flex;
         align-items: center;
         gap: 5px;
+        box-sizing: border-box;
     }
 
     #search-input {
-        font-size: 16px;
+        font-size: 16px !important;
         /* Prevent zoom on iOS */
         padding: 12px 15px;
         flex: 1;
         min-width: 0;
-        /* Prevent overflow */
+        border: none;
+        outline: none;
     }
 
     #search-btn {
@@ -1030,6 +1113,8 @@ body {
         height: 46px;
         min-width: 46px;
         min-height: 46px;
+        max-width: 46px;
+        max-height: 46px;
         border-radius: 50%;
         display: flex;
         align-items: center;
@@ -1037,6 +1122,7 @@ body {
         padding: 0;
         flex-shrink: 0;
         margin: 0;
+        box-sizing: border-box;
     }
 
     #search-btn span {
@@ -1046,7 +1132,6 @@ body {
 
     .category-list {
         grid-template-columns: repeat(2, 1fr);
-        /* 2 columns fixed */
         gap: 15px;
     }
 
@@ -1065,7 +1150,6 @@ body {
 
     .recipe-grid {
         grid-template-columns: 1fr;
-        /* Single column for recipes */
         gap: 25px;
     }
 
@@ -1088,7 +1172,6 @@ body {
     .modal-body {
         padding: 20px;
         padding-bottom: 80px;
-        /* Space for fixed buttons if any */
     }
 
     .modal-title h2 {
@@ -1097,7 +1180,6 @@ body {
 
     .ingredients-grid {
         grid-template-columns: 1fr;
-        /* List view for ingredients */
     }
 
     /* Cooking Mode Mobile */
@@ -1108,14 +1190,12 @@ body {
     .step-container {
         padding: 20px;
         justify-content: flex-start;
-        /* Align top */
         padding-top: 40px;
     }
 
     .step-content {
         padding: 25px;
         margin-bottom: 100px;
-        /* Space for controls */
     }
 
     .step-text {
