@@ -187,41 +187,81 @@ function showToast(message) {
 // --- Enhanced Voice Support 🎤 ---
 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 let recognition;
+let recognitionAvailable = false;
 
 if (SpeechRecognition) {
-    recognition = new SpeechRecognition();
-    recognition.continuous = false;
-    recognition.lang = 'en-US';
-    recognition.interimResults = false;
+    try {
+        recognition = new SpeechRecognition();
+        recognition.continuous = false;
+        recognition.lang = 'en-US';
+        recognition.interimResults = false;
+        recognition.maxAlternatives = 1;
+        recognitionAvailable = true;
 
-    recognition.onstart = () => {
-        state.isListening = true;
-        elements.voiceSearchBtn.classList.add('listening');
-        elements.voiceSearchBtn.style.background = 'var(--primary-color)';
-        elements.voiceSearchBtn.style.color = 'white';
-        elements.searchInput.placeholder = "Listening... Speak now!";
-    };
+        recognition.onstart = () => {
+            state.isListening = true;
+            elements.voiceSearchBtn.classList.add('listening');
+            elements.voiceSearchBtn.style.background = 'var(--primary-color)';
+            elements.voiceSearchBtn.style.color = 'white';
+            elements.voiceSearchBtn.style.animation = 'pulse 1.5s infinite';
+            elements.searchInput.placeholder = "🎤 Listening... Speak now!";
+            showToast('Listening... Please speak your query');
+        };
 
-    recognition.onend = () => {
-        state.isListening = false;
-        elements.voiceSearchBtn.classList.remove('listening');
-        elements.voiceSearchBtn.style.background = '';
-        elements.voiceSearchBtn.style.color = '';
-        elements.searchInput.placeholder = "What are you craving today? (e.g., Pasta...)";
-    };
+        recognition.onend = () => {
+            state.isListening = false;
+            elements.voiceSearchBtn.classList.remove('listening');
+            elements.voiceSearchBtn.style.background = '';
+            elements.voiceSearchBtn.style.color = '';
+            elements.voiceSearchBtn.style.animation = '';
+            updateSearchPlaceholder();
+        };
 
-    recognition.onresult = (event) => {
-        const transcript = event.results[0][0].transcript;
-        handleVoiceCommand(transcript);
-    };
+        recognition.onresult = (event) => {
+            const transcript = event.results[0][0].transcript;
+            const confidence = event.results[0][0].confidence;
+            console.log('Voice recognized:', transcript, 'Confidence:', confidence);
+            showToast(`Heard: "${transcript}"`);
+            handleVoiceCommand(transcript);
+        };
 
-    recognition.onerror = (event) => {
-        console.error('Speech recognition error', event.error);
-        state.isListening = false;
-        elements.searchInput.placeholder = "Error. Try again.";
-    };
-} else {
-    elements.voiceSearchBtn.style.display = 'none';
+        recognition.onerror = (event) => {
+            console.error('Speech recognition error:', event.error);
+            state.isListening = false;
+            elements.voiceSearchBtn.classList.remove('listening');
+            elements.voiceSearchBtn.style.background = '';
+            elements.voiceSearchBtn.style.color = '';
+            elements.voiceSearchBtn.style.animation = '';
+
+            let errorMsg = 'Voice search error. Please try again.';
+            if (event.error === 'not-allowed' || event.error === 'permission-denied') {
+                errorMsg = 'Microphone access denied. Please allow microphone access in browser settings.';
+            } else if (event.error === 'no-speech') {
+                errorMsg = 'No speech detected. Please try again and speak clearly.';
+            } else if (event.error === 'audio-capture') {
+                errorMsg = 'No microphone found. Please check your microphone.';
+            } else if (event.error === 'network') {
+                errorMsg = 'Network error. Please check your connection.';
+            }
+
+            showToast(errorMsg);
+            updateSearchPlaceholder();
+        };
+    } catch (error) {
+        console.error('Failed to initialize speech recognition:', error);
+        recognitionAvailable = false;
+    }
+}
+
+// Style voice button based on availability
+if (!recognitionAvailable || !SpeechRecognition) {
+    elements.voiceSearchBtn.style.display = 'inline-block';
+    elements.voiceSearchBtn.disabled = true;
+    elements.voiceSearchBtn.title = 'Voice search not supported on this device or browser.';
+    elements.voiceSearchBtn.style.background = 'rgba(255, 71, 87, 0.6)';
+    elements.voiceSearchBtn.style.color = 'white';
+    elements.voiceSearchBtn.style.opacity = '0.7';
+    elements.voiceSearchBtn.style.cursor = 'not-allowed';
 }
 
 // --- Speech Synthesis ---
@@ -361,6 +401,9 @@ function renderRecipes(meals) {
 
 function showNoResults() {
     elements.recipeGrid.innerHTML = '<p class="text-center" style="grid-column: 1/-1;">No recipes found. Try something else!</p>';
+    // Notify user via toast and speech
+    showToast('No recipes matched your query.');
+    speak('Sorry, I could not find any recipes for your request.');
 }
 
 function showError() {
@@ -498,6 +541,12 @@ function handleVoiceCommand(command) {
         // Default to search
         elements.searchInput.value = command;
         searchRecipes(command);
+        // Provide immediate feedback if no results after a short delay
+        setTimeout(() => {
+            if (elements.recipeGrid.innerHTML.includes('No recipes found')) {
+                showToast('Sorry, I could not find any recipes for "' + command + '".');
+            }
+        }, 1500);
     }
 }
 
@@ -508,8 +557,35 @@ elements.searchInput.addEventListener('keypress', (e) => {
 });
 
 if (elements.voiceSearchBtn) {
-    elements.voiceSearchBtn.addEventListener('click', () => {
-        state.isListening ? recognition.stop() : recognition.start();
+    elements.voiceSearchBtn.addEventListener('click', async () => {
+        if (!recognitionAvailable || !recognition) {
+            showToast('Voice search is not supported on this device or browser. Try Chrome or Edge.');
+            return;
+        }
+
+        if (elements.voiceSearchBtn.disabled) {
+            showToast('Voice search is currently unavailable.');
+            return;
+        }
+
+        try {
+            if (state.isListening) {
+                recognition.stop();
+            } else {
+                // Request microphone permission first
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    stream.getTracks().forEach(track => track.stop()); // Stop the stream, we just needed permission
+                    recognition.start();
+                } catch (permError) {
+                    console.error('Microphone permission error:', permError);
+                    showToast('Please allow microphone access to use voice search.');
+                }
+            }
+        } catch (error) {
+            console.error('Voice search error:', error);
+            showToast('Voice search failed. Please try again.');
+        }
     });
 }
 
