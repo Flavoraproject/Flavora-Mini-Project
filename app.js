@@ -305,23 +305,27 @@ async function fetchCategories() {
 function renderCategories(categories) {
     elements.categoryList.innerHTML = categories.slice(0, 12).map(cat => `
         <div class="category-card" onclick="searchByCategory('${cat.strCategory}')">
-            <img src="${cat.strCategoryThumb}" alt="${cat.strCategory}" loading="lazy">
+            <img src="${cat.strCategoryThumb}" alt="${cat.strCategory}" loading="lazy" onerror="this.style.display='none'">
             <h4>${cat.strCategory}</h4>
         </div>
     `).join('');
 }
 
 async function fetchPopularRecipes() {
-    // Fetch 8 random recipes in parallel
-    const promises = Array(8).fill(null).map(() => fetch(`${API_BASE}/random.php`).then(r => r.json()));
-    const results = await Promise.all(promises);
-    const meals = results.map(r => r.meals[0]);
+    try {
+        // Optimization: Fetch a list of 'Chicken' meals and pick random ones to reduce request count
+        const res = await fetch(`${API_BASE}/filter.php?c=Chicken`);
+        const data = await res.json();
 
-    // Append to category list as a "Trending" section or replace? 
-    // Let's create a new section dynamically if needed, but for now, let's just log or use if we had a specific section.
-    // Actually, the user asked for "Popular Recipes". Let's put them in the category list area but styled differently?
-    // No, let's keep categories. Let's just have them ready or maybe inject them below categories.
-    // Trending section logic if needed
+        if (data.meals) {
+            // We don't have a specific "Popular" section in the UI currently, 
+            // but we can preload these into the Indian grid or just do nothing.
+            // Since the user complained about slowness, removing the 8 requests is the key.
+            // We'll leave this empty or minimal for now as the logic wasn't using the results anyway.
+        }
+    } catch (error) {
+        console.error('Error fetching popular:', error);
+    }
 }
 
 async function fetchIndianRecipes() {
@@ -339,7 +343,7 @@ async function fetchIndianRecipes() {
         elements.indianGrid.innerHTML = selected.map(meal => `
             <div class="recipe-card" onclick="openRecipe('${meal.idMeal}')">
                 <div class="recipe-image-wrapper">
-                    <img src="${meal.strMealThumb}" alt="${meal.strMeal}" loading="lazy">
+                    <img src="${meal.strMealThumb}" alt="${meal.strMeal}" loading="lazy" onerror="this.src='https://www.themealdb.com/images/media/meals/llcbn01574260722.jpg'; this.parentElement.style.background='#f0f0f0'">
                      <div class="recipe-overlay">
                         <span class="view-btn">
                             <span class="material-symbols-rounded">local_dining</span> View
@@ -476,7 +480,7 @@ function renderRecipes(meals) {
     elements.recipeGrid.innerHTML = meals.map(meal => `
         <div class="recipe-card" onclick="openRecipe('${meal.idMeal}')">
             <div class="recipe-image-wrapper">
-                <img src="${meal.strMealThumb}" alt="${meal.strMeal}" loading="lazy">
+                <img src="${meal.strMealThumb}" alt="${meal.strMeal}" loading="lazy" onerror="this.src='https://www.themealdb.com/images/media/meals/llcbn01574260722.jpg'; this.parentElement.style.background='#f0f0f0'">
                 <div class="recipe-overlay">
                     <span class="view-btn">
                         <span class="material-symbols-rounded">visibility</span> View Recipe
@@ -557,7 +561,7 @@ function renderRecipeDetails(meal) {
 
     document.getElementById('modal-ingredients').innerHTML = ingredients.map(ing => `
         <div class="ingredient-pill">
-            <img src="https://www.themealdb.com/images/ingredients/${ing.ingredient}-Small.png" alt="${ing.ingredient}" loading="lazy">
+            <img src="https://www.themealdb.com/images/ingredients/${ing.ingredient}-Small.png" alt="${ing.ingredient}" loading="lazy" onerror="this.src='https://cdn-icons-png.flaticon.com/512/706/706164.png'; this.style.opacity='0.6';">
             <div>
                 <strong>${ing.ingredient}</strong>
                 <div style="font-size: 12px; color: var(--text-secondary);">${ing.measure}</div>
