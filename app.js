@@ -32,7 +32,11 @@ const elements = {
     progressBar: document.getElementById('progress-bar'),
     hero: document.getElementById('hero'),
     filters: document.getElementById('filters'),
-    categories: document.getElementById('categories')
+    categories: document.getElementById('categories'),
+    indianSection: document.getElementById('indian-special'),
+    indianGrid: document.getElementById('indian-grid'),
+    cuisineSection: document.getElementById('cuisines'),
+    cuisineFilters: document.getElementById('cuisine-filters')
 };
 
 // Categories
@@ -57,7 +61,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initHamburgerMenu();
 
     // Parallel Fetching for Speed ⚡
-    Promise.all([fetchCategories(), fetchPopularRecipes()])
+    Promise.all([fetchCategories(), fetchPopularRecipes(), fetchIndianRecipes(), fetchCuisines()])
         .catch(err => console.error('Initial fetch error:', err));
 });
 
@@ -317,7 +321,56 @@ async function fetchPopularRecipes() {
     // Let's create a new section dynamically if needed, but for now, let's just log or use if we had a specific section.
     // Actually, the user asked for "Popular Recipes". Let's put them in the category list area but styled differently?
     // No, let's keep categories. Let's just have them ready or maybe inject them below categories.
-    // For now, let's just ensure the "Surprise Me" is fast.
+    // Trending section logic if needed
+}
+
+async function fetchIndianRecipes() {
+    try {
+        const res = await fetch(`${API_BASE}/filter.php?a=Indian`);
+        const data = await res.json();
+
+        // Merge with local recipes
+        const allIndianRecipes = [...EXTRA_INDIAN_RECIPES, ...(data.meals || [])];
+
+        // Randomly pick 8
+        const shuffled = allIndianRecipes.sort(() => 0.5 - Math.random());
+        const selected = shuffled.slice(0, 8);
+
+        elements.indianGrid.innerHTML = selected.map(meal => `
+            <div class="recipe-card" onclick="openRecipe('${meal.idMeal}')">
+                <div class="recipe-image-wrapper">
+                    <img src="${meal.strMealThumb}" alt="${meal.strMeal}" loading="lazy">
+                     <div class="recipe-overlay">
+                        <span class="view-btn">
+                            <span class="material-symbols-rounded">local_dining</span> View
+                        </span>
+                    </div>
+                </div>
+                <div class="recipe-info">
+                    <h3>${meal.strMeal}</h3>
+                </div>
+            </div>
+        `).join('');
+    } catch (error) {
+        console.error('Error fetching Indian recipes:', error);
+        elements.indianGrid.innerHTML = '<p>Failed to load Indian recipes.</p>';
+    }
+}
+
+async function fetchCuisines() {
+    try {
+        const res = await fetch(`${API_BASE}/list.php?a=list`);
+        const data = await res.json();
+        // Filter out some unknown or less popular if list is too huge, but usually it's ~25
+        const areas = data.meals;
+        elements.cuisineFilters.innerHTML = areas.map(area => `
+            <button class="filter-btn" onclick="searchByArea('${area.strArea}')">
+                ${area.strArea}
+            </button>
+        `).join('');
+    } catch (error) {
+        console.error('Error fetching cuisines:', error);
+    }
 }
 
 async function searchRecipes(query) {
@@ -327,9 +380,23 @@ async function searchRecipes(query) {
     elements.recipeGrid.innerHTML = '<div class="loading-spinner"></div>';
 
     try {
+        let results = [];
+
+        // Simple client-side search for local recipes (basic name match)
+        const localMatches = EXTRA_INDIAN_RECIPES.filter(r =>
+            r.strMeal.toLowerCase().includes(query.toLowerCase()) ||
+            r.strTags?.toLowerCase().includes(query.toLowerCase())
+        );
+        results = [...localMatches];
+
         const res = await fetch(`${API_BASE}/search.php?s=${query}`);
         const data = await res.json();
-        data.meals ? renderRecipes(data.meals) : showNoResults();
+
+        if (data.meals) {
+            results = [...results, ...data.meals];
+        }
+
+        results.length > 0 ? renderRecipes(results) : showNoResults();
     } catch (error) {
         showError();
     }
@@ -344,6 +411,32 @@ async function searchByCategory(category) {
         const res = await fetch(`${API_BASE}/filter.php?c=${category}`);
         const data = await res.json();
         data.meals ? renderRecipes(data.meals) : showNoResults();
+    } catch (error) {
+        showError();
+    }
+}
+
+async function searchByArea(area) {
+    hideHomeSections();
+    elements.resultsTitle.textContent = `${area} Cuisine`;
+    elements.recipeGrid.innerHTML = '<div class="loading-spinner"></div>';
+
+    try {
+        let results = [];
+
+        // Check if searching for Indian cuisine to include local ones
+        if (area === 'Indian' || area === 'Indian ' || area === 'Indian Cuisine') {
+            results = [...EXTRA_INDIAN_RECIPES];
+        }
+
+        const res = await fetch(`${API_BASE}/filter.php?a=${area}`);
+        const data = await res.json();
+
+        if (data.meals) {
+            results = [...results, ...data.meals];
+        }
+
+        results.length > 0 ? renderRecipes(results) : showNoResults();
     } catch (error) {
         showError();
     }
@@ -364,6 +457,8 @@ function hideHomeSections() {
     elements.hero.classList.add('hidden');
     elements.filters.classList.add('hidden');
     elements.categories.classList.add('hidden');
+    elements.indianSection.classList.add('hidden');
+    elements.cuisineSection.classList.add('hidden');
     elements.recipesSection.classList.remove('hidden');
 }
 
@@ -371,6 +466,8 @@ function showHome() {
     elements.recipesSection.classList.add('hidden');
     elements.filters.classList.remove('hidden');
     elements.categories.classList.remove('hidden');
+    elements.indianSection.classList.remove('hidden');
+    elements.cuisineSection.classList.remove('hidden');
     elements.hero.classList.remove('hidden');
     elements.searchInput.value = '';
 }
@@ -417,6 +514,9 @@ async function openRecipe(id) {
 
         if (fav && fav.strInstructions) {
             meal = fav;
+        } else if (id.startsWith('local_')) {
+            // Handle local recipe
+            meal = EXTRA_INDIAN_RECIPES.find(r => r.idMeal === id);
         } else {
             const res = await fetch(`${API_BASE}/lookup.php?i=${id}`);
             const data = await res.json();
@@ -606,4 +706,5 @@ elements.modalPrintBtn.addEventListener('click', () => window.print());
 
 // Expose functions to window
 window.searchByCategory = searchByCategory;
+window.searchByArea = searchByArea;
 window.openRecipe = openRecipe;
